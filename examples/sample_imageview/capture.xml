@@ -1,0 +1,11 @@
+<xml>
+  <nameserver host="localhost" />
+  <component package="sample_imageview" comp="ImageViewerComp"
+	     context="ImageViewer0" />
+  <component package="sample_imageview" comp="ImageFileCaptureComp"
+	     context="ImageFileCapture0" />
+  <connection>
+    <port type="out" context="ImageFileCapture0" name="Image" />
+    <port type="in" context="ImageViewer0" name="Image" />
+  </connection>
+</xml>

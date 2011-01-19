@@ -1,0 +1,11 @@
+<xml>
+  <nameserver host="localhost" />
+  <component package="SimpleIO" comp="ConsoleInComp"
+	     context="ConsoleIn0" />
+  <component package="SimpleIO" comp="ConsoleOutComp"
+	     context="ConsoleOut0" />
+  <connection>
+    <port type="out" context="ConsoleIn0" name="out" />
+    <port type="in" context="ConsoleOut0" name="in" />
+  </connection>
+</xml>

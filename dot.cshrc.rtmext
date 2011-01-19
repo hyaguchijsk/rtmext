@@ -1,0 +1,7 @@
+setenv RTCTREE_NAMESERVERS localhost
+
+setenv PATH ${PATH}:/path/to/rtmext
+setenv RTM_PACKAGE_PATH /usr/local/src/OpenRTM/OpenRTM-aist-1.0.0/examples:/path/to/rtmext/common:/path/to/rtmext/examples
+
+alias rtmcd 'cd `rtmpack find \!^`'
+

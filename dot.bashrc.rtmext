@@ -1,0 +1,8 @@
+export RTCTREE_NAMESERVERS=localhost
+
+export PATH=${PATH}:/path/to/rtmext
+export RTM_PACKAGE_PATH=/usr/local/src/OpenRTM/OpenRTM-aist-1.0.0/examples:/path/to/rtmext/common:/path/to/rtmext/examples
+
+function rtmcd () {
+    cd `rtmpack find $1`
+}

@@ -1,0 +1,68 @@
+RTMEXTender
+
+(c) 2011 Hiroaki Yaguchi, JSK
+
+* description
+
+This project aims to implement command line tools for OpenRTM
+like rospack, rosmake, roslaunch, etc.
+
+This project is created for Linux, and tested on Ubuntu 10.04 lucid
+
+* env
+
+(bash,zsh)
+export PATH=${PATH}:/path/to/rtmext
+export RTM_PACKAGE_PATH=/usr/local/src/OpenRTM/OpenRTM-aist-1.0.0/examples:/path/to/private/rtm/comps
+
+(csh,tcsh)
+setenv PATH ${PATH}:/path/to/rtmext
+setenv RTM_PACKAGE_PATH /usr/local/src/OpenRTM/OpenRTM-aist-1.0.0/examples:/path/to/private/rtm/comps
+
+* commands
+
+- rtmpack [op] [pack]
+-- rtmpack find [pack]
+   find package path
+-- rtmpack depend [pack]
+   solve dependency of package
+
+- rtmmake (--clean) (--nochain) [pack]
+  make all packages which target is depended on.
+
+- rtmrun [pack] [comp]
+  run component
+
+- rtmlaunch (pack) [launcher_xml]
+  launch, connect, activate components described in launcher_xml
+
+
+* dependency
+
+To solve dependency of your package,
+create "manifest.xml" on your package dir.
+This file is compatible with ROS,
+and must describe depended packages by <depend package="dependency" />.
+
+ex)
+<package>
+  <description brief="brief">
+    description of package
+  </description>
+  <author>Alan Smithee</author>
+  <license>Public Domain</license>
+  <depend package="dependency" />
+</package>
+
+
+* rtmcd
+
+To use rtmcd (like roscd), please add following command to your rc file.
+
+(bash,zsh)
+function rtmcd () {
+    cd `rtmpack find $1`
+}
+
+(csh,tcsh)
+alias rtmcd 'cd `rtmpack find \!^`'

@@ -1,0 +1,9 @@
+<package>
+  <description brief="sample_imageview">
+     sample_imageview
+  </description>
+  <author>Hiroaki Yaguchi, JSK</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <depend package="rtmext_opencv" />
+</package>

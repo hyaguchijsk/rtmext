@@ -1,0 +1,11 @@
+<xml>
+  <nameserver host="localhost" />
+  <component package="SimpleService" comp="MyServiceProviderComp"
+	     context="MyServiceProvider0" />
+  <component package="SimpleService" comp="MyServiceConsumerComp"
+	     context="MyServiceConsumer0" />
+  <connection>
+    <port type="service" context="MyServiceProvider0" name="MyService" />
+    <port type="service" context="MyServiceConsumer0" name="MyService" />
+  </connection>
+</xml>

@@ -1,0 +1,10 @@
+<package>
+  <description brief="rtmext_opencv">
+    rtmext_opencv 
+  </description>
+  <author>Hiroaki Yaguchi, JSK</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <depend package="SimpleIO" />
+  <depend package="SimpleService" />
+</package>

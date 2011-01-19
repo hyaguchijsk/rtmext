@@ -1,0 +1,68 @@
+RTMEXTender
+
+(c) 2011 矢口 裕明, JSK
+
+* 概要
+
+本プロジェクトはOpenRTMのためのコマンドラインツールの提供を目的としています．
+ツール群はROSから着想を得ています．
+
+Linuxを対象とし，Ubuntu 10.04 Lucidで動作確認をしています．
+
+* 必要な環境変数
+
+(bash,zsh)
+export PATH=${PATH}:/path/to/rtmext
+export RTM_PACKAGE_PATH=/usr/local/src/OpenRTM/OpenRTM-aist-1.0.0/examples:/path/to/private/rtm/comps
+
+(csh,tcsh)
+setenv PATH ${PATH}:/path/to/rtmext
+setenv RTM_PACKAGE_PATH /usr/local/src/OpenRTM/OpenRTM-aist-1.0.0/examples:/path/to/private/rtm/comps
+
+* コマンド
+
+- rtmpack [op] [pack]
+-- rtmpack find [pack]
+   パッケージの存在する場所を探します．
+-- rtmpack depend [pack]
+   パッケージの依存関係を解決します．
+
+- rtmmake (--clean) (--nochain) [pack]
+  依存する全パッケージに対し順次makeを実行します．
+
+- rtmlaunch (pack) [launcher_xml]
+  xmlに記述された実行，ポート接続，アクティベートを実行します．
+
+
+* 依存関係について
+
+パッケージ間の依存関係を解決するため，
+manifest.xmlをパッケージディレクトリに追加してください．
+ファイルの書式はROSと互換性があり，
+<depend package="dependency" />
+のように依存するパッケージを記述してください．
+
+例
+<package>
+  <description brief="brief">
+    description of package
+  </description>
+  <author>Alan Smithee</author>
+  <license>Public Domain</license>
+  <depend package="dependency" />
+</package>
+
+
+* rtmcd
+
+rtmcd(roscdと同等)を使用するためには，
+rcファイルに以下の関数もしくはエイリアスを追加してください．
+
+(bash,zsh)
+function rtmcd () {
+    cd `rtmpack find $1`
+}
+
+(csh,tcsh)
+alias rtmcd 'cd `rtmpack find \!^`'
+
