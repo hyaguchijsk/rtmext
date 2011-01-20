@@ -3,6 +3,9 @@
 import sys,os,subprocess,socket
 from xml.dom.minidom import parse
 
+from rtctree.tree import create_rtctree
+from rtctree.path import parse_path
+
 def rtmpath():
     path_env=os.environ.get("RTM_PACKAGE_PATH")
     path_list=[]
@@ -244,3 +247,7 @@ def read_launch_xml(xmlfile):
         return rtml
     return None
 
+def alive_component(cxtname,ns=["localhost"]):
+    rtree=create_rtctree(ns)
+    cxtpath,ret=parse_path(cxtname)
+    return rtree.has_path(cxtpath)

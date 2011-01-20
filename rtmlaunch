@@ -2,6 +2,7 @@
 
 import sys,os,subprocess,signal,time,socket
 import rtmext
+
 from rtcshell import rtls,rtcon,rtact,rtdeact
 
 if __name__ == '__main__':
@@ -34,7 +35,27 @@ if __name__ == '__main__':
             processes.append(proc)
 
         # wait a few second for initialize comps
-        time.sleep(1.0)
+        check_count=50
+        check_int=0.1
+        check_comp=True
+        for i in range(check_count):
+            check_comp=True
+            for comp in rtml.components:
+                cxtname="/" + rtml.nameserver + "/" + comp.context_name()
+                hascomp=rtmext.alive_component(cxtname,[rtml.nameserver])
+                check_comp = check_comp and hascomp
+            if check_comp:
+                break
+            else:
+                time.sleep(check_int)
+
+        if not check_comp:
+            print >>sys.stderr, "component registration failed."
+            for proc in processes:
+                proc.send_signal(signal.SIGINT)
+            for proc in processes:
+                proc.wait()
+            sys.exit(1)
 
         # connect
         for conn in rtml.connectors:
