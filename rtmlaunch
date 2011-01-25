@@ -3,7 +3,7 @@
 import sys,os,subprocess,signal,time,socket
 import rtmext
 
-from rtcshell import rtls,rtcon,rtact,rtdeact
+from rtcshell import rtls,rtcon,rtact,rtdeact,rtconf,rtfind
 
 if __name__ == '__main__':
     args=sys.argv
@@ -86,6 +86,17 @@ if __name__ == '__main__':
                             sportnames.append(sportname)
                             break
                 rtcon.main(sportnames, None)
+
+        # set configuration variables
+        for conf in rtml.configurations:            
+            cmp=rtfind.main(['/'+rtml.nameserver, '--name='+conf[0]+'.rtc', '--type=c'], None, 'list')
+            if cmp != None: 
+                cmp = cmp[0].encode('utf-8')
+            else:
+                continue
+            vname = conf[1].encode('utf-8')
+            vval = conf[2].encode('utf-8')
+            rtconf.main([cmp, "set", vname, vval], None)
 
         # activate
         for comp in rtml.components:

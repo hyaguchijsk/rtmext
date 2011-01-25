@@ -166,6 +166,7 @@ class rtmlauncher:
     def __init__(self):
         self.nameserver="localhost:9876"
         self.components=[]
+        self.configurations=[]
         self.connectors=[]
 
     def set_component(self,pack,comp,cxt):
@@ -228,6 +229,12 @@ def read_launch_xml(xmlfile):
                     rtc_comp=node.attributes.get("comp").value
                     rtc_cxt=node.attributes.get("context").value
                     rtml.set_component(rtc_pack,rtc_comp,rtc_cxt)
+                    for conf in node.childNodes:
+                        if conf.nodeType==node.ELEMENT_NODE:
+                            if conf.tagName=="configuration":
+                                cparams = [rtc_cxt, conf.attributes.get("name").value, conf.attributes.get("value").value]
+                                rtml.configurations.append(cparams)
+
                 elif node.tagName=="connection":
                     rtmcon=rtmconnector()
                     for port in node.childNodes:
