@@ -119,6 +119,7 @@ class rtmcomponent:
         self.comp=""
         self.context=""
         self.formats=""
+        self.execute=True
 
     def context_name(self):
         return self.formats.replace("%h",socket.gethostname()).replace("%n",self.context)
@@ -130,6 +131,7 @@ class rtmcomponent:
         print "   context: " + self.context
         print "   formats: " + self.formats
         print "   context_name: " + self.context_name()
+        print "   execute: " + str(self.execute)
 
 class rtmport:
     def __init__(self):
@@ -169,11 +171,12 @@ class rtmlauncher:
         self.configurations=[]
         self.connectors=[]
 
-    def set_component(self,pack,comp,cxt):
+    def set_component(self,pack,comp,cxt,exe):
         rtmcomp=rtmcomponent()
         rtmcomp.package=pack
         rtmcomp.comp=comp
         rtmcomp.context=cxt
+        rtmcomp.execute=exe
         rtcconfattr=read_rtc_conf(pack)
         if rtcconfattr:
             rtmcomp.formats=rtcconfattr.get("naming.formats")
@@ -228,7 +231,13 @@ def read_launch_xml(xmlfile):
                     rtc_pack=node.attributes.get("package").value
                     rtc_comp=node.attributes.get("comp").value
                     rtc_cxt=node.attributes.get("context").value
-                    rtml.set_component(rtc_pack,rtc_comp,rtc_cxt)
+
+                    rtc_exe=True
+                    rtc_exe_attr=node.attributes.get("execute")
+                    if rtc_exe_attr:
+                        rtc_exe=(rtc_exe_attr.value=="true")
+
+                    rtml.set_component(rtc_pack,rtc_comp,rtc_cxt,rtc_exe)
                     for conf in node.childNodes:
                         if conf.nodeType==node.ELEMENT_NODE:
                             if conf.tagName=="configuration":

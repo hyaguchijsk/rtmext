@@ -31,8 +31,17 @@ if __name__ == '__main__':
         # run
         processes=[]
         for comp in rtml.components:
-            proc=rtmext.rtmrun(comp.package,comp.comp)
-            processes.append(proc)
+            cxtname="/" + rtml.nameserver + "/" + comp.context_name()
+            hascomp=rtmext.alive_component(cxtname,[rtml.nameserver])
+            if comp.execute and not hascomp:
+                print comp.context_name() + ": starting up."
+                proc=rtmext.rtmrun(comp.package,comp.comp)
+                processes.append(proc)
+            elif hascomp:
+                print comp.context_name() + ": already exist."
+            else:
+                print comp.context_name() + ": execute = false."
+
 
         # wait a few second for initialize comps
         check_count=50
