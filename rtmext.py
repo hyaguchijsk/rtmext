@@ -120,6 +120,8 @@ class rtmcomponent:
         self.context=""
         self.formats=""
         self.execute=True
+        self.dstate="activate"
+        self.ainterval=0
 
     def context_name(self):
         return self.formats.replace("%h",socket.gethostname()).replace("%n",self.context)
@@ -171,12 +173,14 @@ class rtmlauncher:
         self.configurations=[]
         self.connectors=[]
 
-    def set_component(self,pack,comp,cxt,exe):
+    def set_component(self,pack,comp,cxt,exe,dstate,ainterval):
         rtmcomp=rtmcomponent()
         rtmcomp.package=pack
         rtmcomp.comp=comp
         rtmcomp.context=cxt
         rtmcomp.execute=exe
+        rtmcomp.dstate=dstate
+        rtmcomp.ainterval=ainterval
         rtcconfattr=read_rtc_conf(pack)
         if rtcconfattr:
             rtmcomp.formats=rtcconfattr.get("naming.formats")
@@ -231,13 +235,21 @@ def read_launch_xml(xmlfile):
                     rtc_pack=node.attributes.get("package").value
                     rtc_comp=node.attributes.get("comp").value
                     rtc_cxt=node.attributes.get("context").value
+                    if node.attributes.get("defaultstate")!=None:
+                        rtc_dstate=node.attributes.get("defaultstate").value
+                    else:
+                        rtc_dstate=None
+                    if node.attributes.get("activation_interval")!=None:
+                        rtc_ainterval=float(node.attributes.get("activation_interval").value)
+                    else:
+                        rtc_ainterval=None
 
                     rtc_exe=True
                     rtc_exe_attr=node.attributes.get("execute")
                     if rtc_exe_attr:
                         rtc_exe=(rtc_exe_attr.value=="true")
 
-                    rtml.set_component(rtc_pack,rtc_comp,rtc_cxt,rtc_exe)
+                    rtml.set_component(rtc_pack,rtc_comp,rtc_cxt,rtc_exe, rtc_dstate, rtc_ainterval)
                     for conf in node.childNodes:
                         if conf.nodeType==node.ELEMENT_NODE:
                             if conf.tagName=="configuration":

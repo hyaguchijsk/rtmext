@@ -3,7 +3,8 @@
   <component package="sample_imageview" comp="ImageViewerComp"
 	     context="ImageViewer0" />
   <component package="sample_imageview" comp="ImageFileCaptureComp"
-	     context="ImageFileCapture0"> 
+	     context="ImageFileCapture0" defaultstate="activate"
+	     activation_interval="100.0"> 
     <configuration name="ImageDir" value="image"/>
     <configuration name="ImagePrefix" value="image-cap"/>
     <configuration name="ImageSuffix" value="jpg"/>

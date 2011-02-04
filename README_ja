@@ -32,8 +32,11 @@ setenv RTM_PACKAGE_PATH /usr/local/src/OpenRTM/OpenRTM-aist-1.0.0/examples:/path
 
 - rtmlaunch (pack) [launcher_xml]
   xmlに記述された実行，ポート接続，アクティベートを実行します．
+  defaultstateを記述することで、一部のコンポーネントをdeactivate
+　状態にしておいたり、activation_intervalにmsで待ち時間を記述する
+　ことで、アクティベーションのタイミングを調節することができます．
   また、componentタグの中でconfigurationの名前と値をxml中に記述
-  しておくことで、起動時にそれらをセットしておくことができます。
+  しておくことで、起動時にそれらをセットしておくことができます．
 
 
 * 依存関係について

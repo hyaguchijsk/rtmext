@@ -110,7 +110,10 @@ if __name__ == '__main__':
         # activate
         for comp in rtml.components:
             compname="/" + rtml.nameserver + "/" + comp.context_name()
-            rtact.main([compname], None)
+            if comp.dstate == 'activate' or comp.dstate == None:
+                if comp.ainterval != None:
+                    time.sleep(comp.ainterval/1000.0)
+                rtact.main([compname], None)
 
         # run til C-c
         try:
