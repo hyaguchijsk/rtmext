@@ -37,7 +37,10 @@ setenv RTM_PACKAGE_PATH /usr/local/src/OpenRTM/OpenRTM-aist-1.0.0/examples:/path
 　ことで、アクティベーションのタイミングを調節することができます．
   また、componentタグの中でconfigurationの名前と値をxml中に記述
   しておくことで、起動時にそれらをセットしておくことができます．
-
+  更に、<terminal-invoke type="tabs"/>のようにタグの内側で記述
+  しておくと、一つ一つのコンポーネントが一つのタブに対応した
+　gnome-terminalとして起動します。この記述がなければ、rtmlaunch
+  を立ち上げたターミナルの中で 動きます。
 
 * 依存関係について
 
