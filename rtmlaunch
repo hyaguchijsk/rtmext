@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys,os,subprocess,signal,time,socket
+import sys,os,subprocess,signal,time,socket, commands
 import rtmext
 
 from rtcshell import rtls,rtcon,rtact,rtdeact,rtconf,rtfind
@@ -29,19 +29,31 @@ if __name__ == '__main__':
         #rtml.debug_print()
 
         # run
+        execcomps=[]
         processes=[]
         for comp in rtml.components:
             cxtname="/" + rtml.nameserver + "/" + comp.context_name()
             hascomp=rtmext.alive_component(cxtname,[rtml.nameserver])
             if comp.execute and not hascomp:
-                print comp.context_name() + ": starting up."
-                proc=rtmext.rtmrun(comp.package,comp.comp)
-                processes.append(proc)
+                execcomps.append(comp)
             elif hascomp:
                 print comp.context_name() + ": already exist."
             else:
                 print comp.context_name() + ": execute = false."
 
+        if rtml.invoketype == "tabs":
+            epacks=[]
+            ecomps=[]
+            for ecomp in execcomps:
+                epacks.append(ecomp.package)
+                ecomps.append(ecomp.comp)
+            proc=rtmext.rtmrun_with_tabs(epacks, ecomps)
+            processes.append(proc)
+        else:
+            for ecomp in execcomps:
+                print ecomp.context_name() + ": starting up."
+                proc=rtmext.rtmrun(ecomp.package,ecomp.comp)
+                processes.append(proc)
 
         # wait a few second for initialize comps
         check_count=50
@@ -124,6 +136,22 @@ if __name__ == '__main__':
             #     compname="/" + rtml.nameserver + "/" + comp.context_name()
             #     rtdeact.main([compname], None)
             # time.sleep(1.0)
+            if rtml.invoketype == "tabs":
+                pid = None
+                prlists= commands.getoutput('ps auxf').split('\n')
+                for ecp in ecomps:
+                    for p in prlists:
+                        if p.find(ecp)!=-1:
+                            pp = p.split(' ')
+                            ppp = pp[1:]
+                            for wr in ppp:
+                                if wr != '':
+                                    pid = int(wr)
+                                    break
+                        if pid!=None:
+                            os.kill(pid, signal.SIGINT)
+                            pid = None
+                            
             for proc in processes:
                 proc.send_signal(signal.SIGINT)
             for proc in processes:

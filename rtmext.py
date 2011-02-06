@@ -112,6 +112,14 @@ def rtmrun(pack,comp):
     else:
         return None
 
+def rtmrun_with_tabs(packs,comps):
+    commands=[]
+    for (pack, comp) in zip(packs, comps):
+        path=rtmpack(["find",pack])
+        if path != "":
+            commands.append("--tab -t " + comp + " -e \"" + path + "/" + comp + "\"" + " --working-directory=" + path)
+    return subprocess.Popen("/usr/bin/gnome-terminal " + " ".join(commands), shell=True)
+
 # for rtmlaunch
 class rtmcomponent:
     def __init__(self):
@@ -172,6 +180,7 @@ class rtmlauncher:
         self.components=[]
         self.configurations=[]
         self.connectors=[]
+        self.invoketype=None
 
     def set_component(self,pack,comp,cxt,exe,dstate,ainterval):
         rtmcomp=rtmcomponent()
@@ -230,6 +239,9 @@ def read_launch_xml(xmlfile):
                         rtml.nameserver=ns_host + ":" + ns_port_attr.value
                     else:
                         rtml.nameserver=ns_host
+                if node.tagName=="terminal-invoke":
+                    if node.attributes.get("type")!=None:
+                        rtml.invoketype=node.attributes.get("type").value
                 if node.tagName=="component":
                     rtc=rtmcomponent()
                     rtc_pack=node.attributes.get("package").value
