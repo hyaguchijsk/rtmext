@@ -3,7 +3,7 @@
 import sys,os,subprocess,socket
 from xml.dom.minidom import parse
 
-from rtctree.tree import create_rtctree
+from rtctree.tree import *
 from rtctree.path import parse_path
 
 def rtmpath():
@@ -288,6 +288,6 @@ def read_launch_xml(xmlfile):
     return None
 
 def alive_component(cxtname,ns=["localhost"]):
-    rtree=create_rtctree(ns)
+    rtree=RTCTree(ns)
     cxtpath,ret=parse_path(cxtname)
     return rtree.has_path(cxtpath)

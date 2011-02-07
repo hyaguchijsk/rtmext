@@ -3,7 +3,7 @@
 import sys,os,subprocess,signal,time,socket, commands
 import rtmext
 
-from rtcshell import rtls,rtcon,rtact,rtdeact,rtconf,rtfind
+from rtshell import rtls,rtcon,rtact,rtdeact,rtconf,rtfind
 
 if __name__ == '__main__':
     args=sys.argv
@@ -110,7 +110,7 @@ if __name__ == '__main__':
 
         # set configuration variables
         for conf in rtml.configurations:            
-            cmp=rtfind.main(['/'+rtml.nameserver, '--name='+conf[0]+'.rtc', '--type=c'], None, 'list')
+            rtfret , cmp =rtfind.main(['/'+rtml.nameserver, '--name='+conf[0]+'.rtc', '--type=c'], None)
             if cmp != None: 
                 cmp = cmp[0].encode('utf-8')
             else:
@@ -130,6 +130,7 @@ if __name__ == '__main__':
         # run til C-c
         try:
             while 1:
+                time.sleep(0.001)
                 pass
         except KeyboardInterrupt:
             # for comp in rtml.components:
