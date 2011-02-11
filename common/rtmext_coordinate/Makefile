@@ -37,4 +37,4 @@ clean: clean_skelstub
 clean_skelstub:
 	rm -f *Skel.h *Skel.cpp
 	rm -f *Stub.h *Stub.cpp
-	rm -f TimedCoordinateDynSK.cc TimedCoordinateSK.cc TimedCoordinateDunSK.hh
+	rm -f TimedCoordinateDynSK.cc TimedCoordinateSK.cc TimedCoordinate.hh
