@@ -1,3 +1,9 @@
+/**
+   @file ImageTranslater.cpp
+   @brief Image Translater, OpenCV cv::Mat <-> CameraImage
+   @author Hiroaki Yaguchi, JSK
+*/
+
 #include "ImageTranslater.h"
 
 using namespace std;

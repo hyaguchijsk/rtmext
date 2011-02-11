@@ -1,5 +1,8 @@
-// @brief Image Translater, OpenCV cv::Mat <-> CameraImage
-// @author Hiroaki Yaguchi, JSK
+/**
+   @file ImageTranslater.h
+   @brief Image Translater, OpenCV cv::Mat <-> CameraImage
+   @author Hiroaki Yaguchi, JSK
+*/
 
 #ifndef __IMAGETRANSLATER_H__
 #define __IMAGETRANSLATER_H__
