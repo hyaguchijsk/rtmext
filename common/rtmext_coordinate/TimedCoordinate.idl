@@ -1,0 +1,17 @@
+#ifndef TimedCoordinate_idl
+#define TimedCoordinate_idl
+
+#include "BasicDataType.idl"
+
+module RTC
+{
+  struct TimedCoordinate
+  {
+    Time tm;
+    string parent_id;
+    string frame_id;
+    sequence<float> transform;
+  };
+};
+
+#endif
