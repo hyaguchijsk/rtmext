@@ -42,6 +42,17 @@ setenv RTM_PACKAGE_PATH /usr/local/src/OpenRTM/OpenRTM-aist-1.0.0/examples:/path
 　gnome-terminalとして起動します。この記述がなければ、rtmlaunch
   を立ち上げたターミナルの中で 動きます。
 
+  また、コンポーネントそのものでなくても、一緒に起動したい関連
+  スクリプトに関しては、
+  <process package="example" proc="test.l" delaytime="10" />
+  のように記述することで、起動時の遅れ時間を指定して起動する
+　ことができる。この時、拡張子が.lのものは、euslispのファイルと
+　して扱われる。EusLispのどのバイナリを起動に使うかは、環境変数
+　EUSに文字列をセットすることで指定できる。.bashの場合は、.bashrcに
+　export EUS='irteusgl' 
+　のようにすればよい。この環境変数がない場合には、デフォルトの
+　irteusglが使われる。
+
 * 依存関係について
 
 パッケージ間の依存関係を解決するため，
