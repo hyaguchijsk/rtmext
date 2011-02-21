@@ -41,18 +41,31 @@ if __name__ == '__main__':
             else:
                 print comp.context_name() + ": execute = false."
 
+        for proc in  rtml.processes:
+            execcomps.append(proc)
+
         if rtml.invoketype == "tabs":
             epacks=[]
             ecomps=[]
+            delays=[]
             for ecomp in execcomps:
                 epacks.append(ecomp.package)
                 ecomps.append(ecomp.comp)
-            proc=rtmext.rtmrun_with_tabs(epacks, ecomps)
+                if hasattr(ecomp, "delay"):
+                    delays.append(ecomp.delay)
+                else:
+                    delays.append("0")
+
+            proc=rtmext.rtmrun_with_tabs(epacks, ecomps, delays)
             processes.append(proc)
         else:
             for ecomp in execcomps:
                 print ecomp.context_name() + ": starting up."
-                proc=rtmext.rtmrun(ecomp.package,ecomp.comp)
+                if hasattr(ecomp, "delay"):
+                    delay=ecomp.delay
+                else:
+                    delay="0"
+                proc=rtmext.rtmrun(ecomp.package,ecomp.comp, delay)
                 processes.append(proc)
 
         # wait a few second for initialize comps
@@ -150,11 +163,11 @@ if __name__ == '__main__':
                                     pid = int(wr)
                                     break
                         if pid!=None:
-                            os.kill(pid, signal.SIGINT)
+                            os.kill(pid, signal.SIGKILL) #for kill euslisp process
                             pid = None
                             
             for proc in processes:
-                proc.send_signal(signal.SIGINT)
+                proc.send_signal(signal.SIGKILL) #for kill euslisp process
             for proc in processes:
                 proc.wait()
 

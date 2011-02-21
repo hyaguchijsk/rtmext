@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys,os,subprocess,socket
+import sys,os,subprocess,socket,commands
 from xml.dom.minidom import parse
 
 from rtctree.tree import *
@@ -105,22 +105,67 @@ def rtmmake(arg,clean=False,nochain=False):
         else:
             print >> sys.stderr, "rtmmake: no Makefile found: " + arg
 
-def rtmrun(pack,comp):
+def rtmrun(pack,comp,delay):
     path=rtmpack(["find",pack])
+    pythonpath=commands.getoutput("which python")
+    if os.environ.has_key("EUS"):
+        if os.environ["EUS"] == "jskrbeusgl":
+            euslisppath=commands.getoutput("which jskrbeusgl")
+    else:
+        euslisppath=commands.getoutput("which irteusgl")
+    tmppaths=commands.getoutput("which -a invoke_command_with_sleep.sh").split('\n')
+    invoke_commandpath=tmppaths[len(tmppaths)-1]
+        
     if path != "":
-        return subprocess.Popen(path + "/" + comp, cwd=path)
+        if comp.find(".py") >= 0:
+            return subprocess.Popen(pythonpath + " " + path + "/" + comp, cwd=path, shell=True)
+        elif comp.find(".l") >= 0:
+            return subprocess.Popen(invoke_commandpath + " " + delay + " " + euslisppath + " " + path + "/" + comp, cwd=path, shell=True)
+        else:
+            return subprocess.Popen(path + "/" + comp, cwd=path)
     else:
         return None
 
-def rtmrun_with_tabs(packs,comps):
-    commands=[]
-    for (pack, comp) in zip(packs, comps):
+def rtmrun_with_tabs(packs,comps,delays):
+    pythonpath=commands.getoutput("which python")
+    if os.environ.has_key("EUS"):
+        if os.environ["EUS"] == "jskrbeusgl":
+            euslisppath=commands.getoutput("which jskrbeusgl")
+    else:
+        euslisppath=commands.getoutput("which irteusgl")
+    tmppaths=commands.getoutput("which -a invoke_command_with_sleep.sh").split('\n')
+    invoke_commandpath=tmppaths[len(tmppaths)-1]
+
+    tabcommands=[]
+
+    for (pack, comp, delay) in zip(packs, comps, delays):
         path=rtmpack(["find",pack])
         if path != "":
-            commands.append("--tab -t " + comp + " -e \"" + path + "/" + comp + "\"" + " --working-directory=" + path)
-    return subprocess.Popen("/usr/bin/gnome-terminal " + " ".join(commands), shell=True)
+            if comp.find(".py") >= 0:
+                tabcommands.append("--tab -t " + comp + " -e \"" + pythonpath + " " + path + "/" + comp + "\"" + " --working-directory=" + path)
+            elif comp.find(".l") >= 0:
+                tabcommands.append("--tab -t " + comp + " -e \"" + invoke_commandpath + " " + delay + " " + euslisppath + " " + path + "/" + comp + "\"" + " --working-directory=" + path)
+            else:
+                tabcommands.append("--tab -t " + comp + " -e \"" + path + "/" + comp + "\"" + " --working-directory=" + path)
+
+    return subprocess.Popen("/usr/bin/gnome-terminal " + " ".join(tabcommands), shell=True)
 
 # for rtmlaunch
+class rtmprocess:
+    def __init__(self):
+        self.package=""
+        self.comp=""
+        self.delay=""
+
+    def context_name(self):
+        return self.comp
+
+    def debug_print(self):
+        print "  process:"
+        print "   package: " + self.package
+        print "   comp: " + self.comp
+        print "   delay: " + self.delay
+
 class rtmcomponent:
     def __init__(self):
         self.package=""
@@ -178,6 +223,7 @@ class rtmlauncher:
     def __init__(self):
         self.nameserver="localhost:9876"
         self.components=[]
+        self.processes=[]
         self.configurations=[]
         self.connectors=[]
         self.invoketype=None
@@ -194,6 +240,13 @@ class rtmlauncher:
         if rtcconfattr:
             rtmcomp.formats=rtcconfattr.get("naming.formats")
         self.components.append(rtmcomp)
+
+    def set_process(self,pack,proc,delay):
+        rtmproc=rtmprocess()
+        rtmproc.package=pack
+        rtmproc.comp=proc
+        rtmproc.delay=delay
+        self.processes.append(rtmproc)
 
     def debug_print(self):
         print "rtmlauncer:"
@@ -243,7 +296,6 @@ def read_launch_xml(xmlfile):
                     if node.attributes.get("type")!=None:
                         rtml.invoketype=node.attributes.get("type").value
                 if node.tagName=="component":
-                    rtc=rtmcomponent()
                     rtc_pack=node.attributes.get("package").value
                     rtc_comp=node.attributes.get("comp").value
                     rtc_cxt=node.attributes.get("context").value
@@ -267,6 +319,15 @@ def read_launch_xml(xmlfile):
                             if conf.tagName=="configuration":
                                 cparams = [rtc_cxt, conf.attributes.get("name").value, conf.attributes.get("value").value]
                                 rtml.configurations.append(cparams)
+
+                if node.tagName=="process":
+                    rtc_pack=node.attributes.get("package").value
+                    rtc_proc=node.attributes.get("proc").value
+                    if node.attributes.get("delaytime")!=None:
+                        rtc_delay=node.attributes.get("delaytime").value
+                    else:
+                        rtc_delay="0"
+                    rtml.set_process(rtc_pack,rtc_proc, rtc_delay)
 
                 elif node.tagName=="connection":
                     rtmcon=rtmconnector()
