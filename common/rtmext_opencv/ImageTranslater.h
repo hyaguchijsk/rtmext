@@ -13,6 +13,7 @@
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <rtm/idl/BasicDataTypeSkel.h>
 #include <rtm/idl/InterfaceDataTypesSkel.h>
@@ -26,5 +27,7 @@ bool convertToRTM(Mat &cvimage,CameraImage &rtmimage);
 
 bool encodeImageToRTM(string type, Mat &cvimage, CameraImage &rtmimage);
 bool decodeImageToCV(CameraImage &rtmimage, Mat &cvimage);
+
+bool convertKinectDepthToCV(CameraImage &rtmimage, Mat &cvimage);
 
 #endif

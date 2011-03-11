@@ -20,6 +20,9 @@ bool convertToCV(CameraImage &rtmimage,Mat &cvimage){
   case 8:
     type=CV_8UC1;
     break;
+  case 11: // Kinect Depth
+    return convertKinectDepthToCV(rtmimage,cvimage);
+    break;
   case 24:
     type=CV_8UC3;
     break;
@@ -108,6 +111,32 @@ bool decodeImageToCV(CameraImage &rtmimage, Mat &cvimage){
     buf[i]=rtmimage.pixels[i];
   Mat mat=imdecode(Mat(buf),CV_LOAD_IMAGE_COLOR);
   mat.copyTo(cvimage);
+
+  return true;
+}
+bool convertKinectDepthToCV(CameraImage &rtmimage, Mat &cvimage){
+  if(rtmimage.bpp != 11)
+    return false;
+
+  cvimage.create(rtmimage.height,rtmimage.width,CV_8UC3);
+  Mat hsv(rtmimage.height,rtmimage.width,CV_8UC3);
+
+  unsigned char *buf=hsv.ptr();
+  for(int i=0;i<rtmimage.height*rtmimage.width;i++){
+    int idx=i*3;
+    int didx=i*2;
+    unsigned short depth=rtmimage.pixels[didx]+((unsigned short)rtmimage.pixels[didx+1]<<8);
+    if(depth<1024){
+      float col=((float)depth-512)*120.0/512.0;
+      col=(col>0.0)?col:0.0;
+      col=(col<120.0)?col:150.0;
+      buf[idx]=(unsigned char)col;
+      buf[idx+1]=buf[idx+2]=255;
+    }else{
+      buf[idx]=buf[idx+1]=buf[idx+2]=0;
+    }
+  }
+  cvtColor(hsv,cvimage,CV_HSV2BGR);
 
   return true;
 }
