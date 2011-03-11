@@ -44,9 +44,10 @@ if __name__ == '__main__':
         for proc in  rtml.processes:
             execcomps.append(proc)
 
+        ecomps=[]
+        terminations=[]
         if rtml.invoketype == "tabs":
             epacks=[]
-            ecomps=[]
             delays=[]
             for ecomp in execcomps:
                 epacks.append(ecomp.package)
@@ -55,6 +56,11 @@ if __name__ == '__main__':
                     delays.append(ecomp.delay)
                 else:
                     delays.append("0")
+                #how to terminate this process
+                if ecomp.comp.find(".l") >= 0:
+                    terminations.append("kill")
+                else:
+                    terminations.append("int")
 
             proc=rtmext.rtmrun_with_tabs(epacks, ecomps, delays)
             processes.append(proc)
@@ -65,6 +71,11 @@ if __name__ == '__main__':
                     delay=ecomp.delay
                 else:
                     delay="0"
+                #how to terminate this process
+                if ecomp.comp.find(".l") >= 0:
+                    terminations.append("kill")
+                else:
+                    terminations.append("int")
                 proc=rtmext.rtmrun(ecomp.package,ecomp.comp, delay)
                 processes.append(proc)
 
@@ -153,7 +164,7 @@ if __name__ == '__main__':
             if rtml.invoketype == "tabs":
                 pid = None
                 prlists= commands.getoutput('ps auxf').split('\n')
-                for ecp in ecomps:
+                for (ecp, term) in zip(ecomps, terminations):
                     for p in prlists:
                         if p.find(ecp)!=-1:
                             pp = p.split(' ')
@@ -163,11 +174,22 @@ if __name__ == '__main__':
                                     pid = int(wr)
                                     break
                         if pid!=None:
-                            os.kill(pid, signal.SIGKILL) #for kill euslisp process
+                            if term == 'int':
+                                os.kill(pid, signal.SIGINT)
+                            elif term == 'kill':
+                                os.kill(pid, signal.SIGKILL)
+                            else:
+                                os.kill(pid, signal.SIGINT)
                             pid = None
                             
-            for proc in processes:
-                proc.send_signal(signal.SIGKILL) #for kill euslisp process
+            for (proc, term) in zip(processes, terminations):
+                if term == 'int':
+                    proc.send_signal(signal.SIGINT)
+                elif term == 'kill':
+                    proc.send_signal(signal.SIGKILL)
+                else:
+                    proc.send_signal(signal.SIGINT)
+                
             for proc in processes:
                 proc.wait()
 
