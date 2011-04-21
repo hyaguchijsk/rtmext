@@ -60,14 +60,25 @@ def rtmdepend_chain(pack):
     parents.reverse()
     return(parents)
 
-def rtmpack(args):
-    path_list=rtmpath()
-    
+def search_package(pkname, path_list):
+    for path in path_list:
+        for dir_name in os.listdir(path):
+            if os.path.isdir(path + "/" + dir_name):
+                if dir_name == pkname:
+                    return(path + "/" + pkname)
+                else:
+                    if path != '.':
+                        result = search_package(pkname, [path + "/" + dir_name])
+                        if result!=None:
+                            return result
+    return None
+
+def rtmpack(args):  
     if args[0]=="find":
-        for path in path_list:
-            for dir_name in os.listdir(path):
-                if dir_name == args[1]:
-                    return(path + "/" + args[1])
+        path_list=rtmpath()
+        pkpath = search_package(args[1], path_list)
+        if pkpath != None:
+            return pkpath
     elif args[0]=="depend":
         #return(rtmdepend(args[1]))
         return(rtmdepend_chain(args[1]))
