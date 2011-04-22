@@ -73,6 +73,17 @@ def search_package(pkname, path_list):
                             return result
     return None
 
+def search_file(compname, searchpath):
+    for cname in os.listdir(searchpath):
+        if os.path.isdir(searchpath + "/" + cname):
+            result = search_file(compname, searchpath + "/" + cname)
+            if result!=None:
+                return result
+        else:
+            if cname == compname:
+                return(searchpath + "/" + compname)
+    return None
+
 def rtmpack(args):  
     if args[0]=="find":
         path_list=rtmpath()
@@ -127,13 +138,15 @@ def rtmrun(pack,comp,delay):
     tmppaths=commands.getoutput("which -a invoke_command_with_sleep.sh").split('\n')
     invoke_commandpath=tmppaths[len(tmppaths)-1]
         
+    comppath = search_file(comp, path)
+
     if path != "":
         if comp.find(".py") >= 0:
-            return subprocess.Popen(pythonpath + " " + path + "/" + comp, cwd=path, shell=True)
+            return subprocess.Popen(pythonpath + " " + comppath, cwd=path, shell=True)
         elif comp.find(".l") >= 0:
-            return subprocess.Popen(invoke_commandpath + " " + delay + " " + euslisppath + " " + path + "/" + comp, cwd=path, shell=True)
+            return subprocess.Popen(invoke_commandpath + " " + delay + " " + euslisppath + " " + comppath, cwd=path, shell=True)
         else:
-            return subprocess.Popen(path + "/" + comp, cwd=path)
+            return subprocess.Popen(comppath, cwd=path)
     else:
         return None
 
@@ -151,13 +164,15 @@ def rtmrun_with_tabs(packs,comps,delays):
 
     for (pack, comp, delay) in zip(packs, comps, delays):
         path=rtmpack(["find",pack])
-        if path != "":
+        comppath = search_file(comp, path)
+
+        if path != "" and comppath != None:
             if comp.find(".py") >= 0:
-                tabcommands.append("--tab -t " + comp + " -e \"" + pythonpath + " " + path + "/" + comp + "\"" + " --working-directory=" + path)
+                tabcommands.append("--tab -t " + comp + " -e \"" + pythonpath + " " + comppath + "\"" + " --working-directory=" + path)
             elif comp.find(".l") >= 0:
-                tabcommands.append("--tab -t " + comp + " -e \"" + invoke_commandpath + " " + delay + " " + euslisppath + " " + path + "/" + comp + "\"" + " --working-directory=" + path)
+                tabcommands.append("--tab -t " + comp + " -e \"" + invoke_commandpath + " " + delay + " " + euslisppath + " " + comppath + "\"" + " --working-directory=" + path)
             else:
-                tabcommands.append("--tab -t " + comp + " -e \"" + path + "/" + comp + "\"" + " --working-directory=" + path)
+                tabcommands.append("--tab -t " + comp + " -e \"" + comppath + "\"" + " --working-directory=" + path)
 
     return subprocess.Popen("/usr/bin/gnome-terminal " + " ".join(tabcommands), shell=True)
 
@@ -272,8 +287,8 @@ class rtmlauncher:
 def read_rtc_conf(pack):
     fullpath=rtmpack(["find",pack])
     if not fullpath=="":
-        conffile=fullpath + "/rtc.conf"
-        if os.path.exists(conffile):
+        conffile=search_file('rtc.conf', fullpath)
+        if conffile and os.path.exists(conffile):
             f=open(conffile)
             lines=f.readlines()
             f.close()
@@ -288,7 +303,7 @@ def read_rtc_conf(pack):
             return params
     return None
 
-def read_launch_xml(xmlfile):
+def read_launch_xml(xmlfile, launchpath=None):
     if os.path.exists(xmlfile):
         rtml=rtmlauncher()
         xmldom=parse(xmlfile)
@@ -323,12 +338,16 @@ def read_launch_xml(xmlfile):
                     rtc_exe_attr=node.attributes.get("execute")
                     if rtc_exe_attr:
                         rtc_exe=(rtc_exe_attr.value=="true")
-
                     rtml.set_component(rtc_pack,rtc_comp,rtc_cxt,rtc_exe, rtc_dstate, rtc_ainterval)
                     for conf in node.childNodes:
                         if conf.nodeType==node.ELEMENT_NODE:
                             if conf.tagName=="configuration":
-                                cparams = [rtc_cxt, conf.attributes.get("name").value, conf.attributes.get("value").value]
+                                vvalue =conf.attributes.get("value").value 
+                                if conf.attributes.get("filesearch") != None:
+                                    if conf.attributes.get("filesearch").value == 'yes':
+                                        packpath=rtmpack(["find",rtc_pack])
+                                        vvalue=search_file(conf.attributes.get("value").value, launchpath)
+                                cparams = [rtc_cxt, conf.attributes.get("name").value, vvalue]
                                 rtml.configurations.append(cparams)
 
                 if node.tagName=="process":

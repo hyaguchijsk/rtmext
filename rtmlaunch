@@ -9,6 +9,7 @@ if __name__ == '__main__':
     args=sys.argv
 
     xmlfile=""
+    path=""
 
     if len(args)==3:
         path=rtmext.rtmpack(["find",args[1]])
@@ -23,7 +24,7 @@ if __name__ == '__main__':
         print >>sys.stderr, "   or: rtmlaunch [launcher_xml]"
         sys.exit(1)
 
-    rtml=rtmext.read_launch_xml(xmlfile)
+    rtml=rtmext.read_launch_xml(xmlfile, launchpath=path)
 
     if rtml:
         #rtml.debug_print()
