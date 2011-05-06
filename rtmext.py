@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-import sys,os,subprocess,socket,commands
+import sys,os,subprocess,socket,commands,time
 from xml.dom.minidom import parse
 
 from rtctree.tree import *
 from rtctree.path import parse_path
+from rtshell import rtls,rtcon,rtact,rtdeact,rtconf,rtfind,rtmgr
 
 def rtmpath():
     path_env=os.environ.get("RTM_PACKAGE_PATH")
@@ -127,8 +128,15 @@ def rtmmake(arg,clean=False,nochain=False):
         else:
             print >> sys.stderr, "rtmmake: no Makefile found: " + arg
 
-def rtmrun(pack,comp,delay):
+def ordsum(str):
+    sum = 0
+    for chr in str:
+        sum += ord(chr)
+    return sum
+
+def rtmrun(pack, comp, cxt, delay, host=None, port=None):
     path=rtmpack(["find",pack])
+    sproc=None
     pythonpath=commands.getoutput("which python")
     if os.environ.has_key("EUS"):
         if os.environ["EUS"] == "jskrbeusgl":
@@ -137,20 +145,61 @@ def rtmrun(pack,comp,delay):
         euslisppath=commands.getoutput("which irteusgl")
     tmppaths=commands.getoutput("which -a invoke_command_with_sleep.sh").split('\n')
     invoke_commandpath=tmppaths[len(tmppaths)-1]
-        
-    comppath = search_file(comp, path)
 
-    if path != "":
-        if comp.find(".py") >= 0:
-            return subprocess.Popen(pythonpath + " " + comppath, cwd=path, shell=True)
-        elif comp.find(".l") >= 0:
-            return subprocess.Popen(invoke_commandpath + " " + delay + " " + euslisppath + " " + comppath, cwd=path, shell=True)
-        else:
-            return subprocess.Popen(comppath, cwd=path)
+    if host == None:
+        host = socket.gethostname()
+    if port == None:
+        port = 2809
+
+    rtcdcommand = None
+    baseno = 2809
+
+    if comp.find('.so')!=-1:
+        #use rtmgr for creating components    
+        uname = '_' + str(cxt)
+
+        tmpfn = "/tmp/rtcconf" + uname + ".XXX"
+        tmpconf = open(tmpfn, 'w')
+        tmpconf.write("corba.nameservers: " + host + ":" + str(port) + "\n")
+        tmpconf.write("logger.enable: NO\n")
+        tmpconf.write("manager.instance_name: rtmext_manager" + uname + "\n")
+        mmport = ordsum(uname) + baseno
+        tmpconf.write("corba.master_manager:" + host + ":" + str(mmport) + "\n")
+        tmpconf.write("manager.modules.load_path: ./\n")
+        tmpconf.write("manager.modules.abs_path_allowed: yes\n")
+        tmpconf.close()
+        rtcdcommand = "rtcd rtmextmgr -f " + tmpfn + " -d"
+
+        sproc = subprocess.Popen(rtcdcommand, cwd=path, shell=True)
+
+        time.sleep(0.1)
+        #loading & creating components
+        rtfret , manpath = rtfind.main(['/' + host, '--name=rtmext_manager' + uname + '.mgr', '--type=m'], None)
+        sopath = search_file(comp, path)
+        classname = comp[:len(comp)-3]
+        initfuncname = classname + "Init"
+        rtmgr.main(['--load=' + str(sopath) + ':' + str(initfuncname), manpath[0]], None)
+        rtmgr.main(['--create=' + str(classname) + '?instance_name=' + str(cxt), manpath[0]], None)
+        time.sleep(0.5)
+
+        #removing temporary files
+        os.remove(tmpfn)
     else:
-        return None
+        comppath = search_file(comp, path)
 
-def rtmrun_with_tabs(packs,comps,delays):
+        if path != "":
+            if comp.find(".py") >= 0:
+                sproc = subprocess.Popen(pythonpath + " " + comppath, cwd=path, shell=True)
+            elif comp.find(".l") >= 0:
+                sproc = subprocess.Popen(invoke_commandpath + " " + delay + " " + euslisppath + " " + comppath, cwd=path, shell=True)
+            else:
+                sproc = subprocess.Popen(comppath, cwd=path)
+        else:
+            sproc = None
+
+    return [sproc, rtcdcommand]
+
+def rtmrun_with_tabs(packs, comps, cxts, delays, host=None, port=None):
     pythonpath=commands.getoutput("which python")
     if os.environ.has_key("EUS"):
         if os.environ["EUS"] == "jskrbeusgl":
@@ -161,20 +210,73 @@ def rtmrun_with_tabs(packs,comps,delays):
     invoke_commandpath=tmppaths[len(tmppaths)-1]
 
     tabcommands=[]
+    rtcdcommands = []
+    unames = []
+    baseno = 2809
 
-    for (pack, comp, delay) in zip(packs, comps, delays):
+    if host == None:
+        host = socket.gethostname()
+    if port == None:
+        port = 2809
+
+    for (pack, comp, cxt, delay) in zip(packs, comps, cxts, delays):
         path=rtmpack(["find",pack])
-        comppath = search_file(comp, path)
+        rtcdcommand = None
+        if comp.find('.so')!=-1:
+            #use rtmgr for creating components
+            uname = '_' + str(cxt)
 
-        if path != "" and comppath != None:
-            if comp.find(".py") >= 0:
-                tabcommands.append("--tab -t " + comp + " -e \"" + pythonpath + " " + comppath + "\"" + " --working-directory=" + path)
-            elif comp.find(".l") >= 0:
-                tabcommands.append("--tab -t " + comp + " -e \"" + invoke_commandpath + " " + delay + " " + euslisppath + " " + comppath + "\"" + " --working-directory=" + path)
-            else:
-                tabcommands.append("--tab -t " + comp + " -e \"" + comppath + "\"" + " --working-directory=" + path)
+            tmpfn = "/tmp/rtcconf" + uname + ".XXX"
+            tmpconf = open(tmpfn, 'w')
+            tmpconf.write("corba.nameservers: " + host + ":" + str(port) + "\n")
+            tmpconf.write("logger.enable: NO\n")
+            tmpconf.write("manager.instance_name: rtmext_manager" + uname + "\n")
+            mmport = ordsum(uname) + baseno
+            tmpconf.write("corba.master_manager:" + host + ":" + str(mmport) + "\n")
+            tmpconf.write("manager.modules.load_path: ./\n")
+            tmpconf.write("manager.modules.abs_path_allowed: yes\n")
+            tmpconf.close()
+            rtcdcommand = "rtcd rtmextmgr -f " + tmpfn + " -d"
+        
+            tabcommands.append("--tab -t " + comp + " -e \"" + rtcdcommand + "\"" + " --working-directory=" + path)
+            unames.append(uname)
+        else:
+            comppath = search_file(comp, path)
+            if path != "" and comppath != None:
+                if comp.find(".py") >= 0:
+                    tabcommands.append("--tab -t " + comp + " -e \"" + pythonpath + " " + comppath + "\"" + " --working-directory=" + path)
+                elif comp.find(".l") >= 0:
+                    tabcommands.append("--tab -t " + comp + " -e \"" + invoke_commandpath + " " + delay + " " + euslisppath + " " + comppath + "\"" + " --working-directory=" + path)
+                else:
+                    tabcommands.append("--tab -t " + comp + " -e \"" + comppath + "\"" + " --working-directory=" + path)
 
-    return subprocess.Popen("/usr/bin/gnome-terminal " + " ".join(tabcommands), shell=True)
+        rtcdcommands.append(rtcdcommand)
+
+    if tabcommands != []:
+        sprocs = subprocess.Popen("/usr/bin/gnome-terminal " + " ".join(tabcommands), shell=True)
+
+    time.sleep(0.1)
+    #loading & creating components from manager
+    manager_no = 0
+    for (pack, comp, cxt) in zip(packs, comps, cxts):
+        if comp.find('.so')!=-1:
+            rtfret , manpath = rtfind.main(['/' + host, '--name=rtmext_manager' + unames[manager_no] + '.mgr', '--type=m'], None)
+            path=rtmpack(["find",pack])
+            sopath = search_file(comp, path)
+            classname = comp[:len(comp)-3]
+            initfuncname = classname + "Init"
+            if manpath !=[]:
+                rtmgr.main(['--load=' + str(sopath) + ':' + str(initfuncname), manpath[0]], None)
+                rtmgr.main(['--create=' + str(classname) + '?instance_name=' + str(cxt), manpath[0]], None)
+                time.sleep(0.5)
+                manager_no += 1
+        
+    #removing temporary files
+    for i in range(manager_no):
+        tmpfn = "/tmp/rtcconf" + unames[i] + ".XXX"
+        os.remove(tmpfn)
+
+    return [sprocs, rtcdcommands]
 
 # for rtmlaunch
 class rtmprocess:

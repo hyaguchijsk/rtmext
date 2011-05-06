@@ -32,6 +32,7 @@ if __name__ == '__main__':
         # run
         execcomps=[]
         processes=[]
+        rtcdcommands=[]
         for comp in rtml.components:
             cxtname="/" + rtml.nameserver + "/" + comp.context_name()
             hascomp=rtmext.alive_component(cxtname,[rtml.nameserver])
@@ -47,12 +48,26 @@ if __name__ == '__main__':
 
         ecomps=[]
         terminations=[]
+        if rtml.nameserver != None:
+            colonp = rtml.nameserver.find(":")
+            if colonp != -1:
+                exechost=rtml.nameserver[:colonp]
+                execport=rtml.nameserver[colonp+1:]
+            else:
+                exechost=rtml.nameserver
+                execport=None                
+        else:
+            exechost=None
+            execport=None
+
         if rtml.invoketype == "tabs":
             epacks=[]
             delays=[]
+            ecxts=[]
             for ecomp in execcomps:
                 epacks.append(ecomp.package)
                 ecomps.append(ecomp.comp)
+                ecxts.append(ecomp.context)
                 if hasattr(ecomp, "delay"):
                     delays.append(ecomp.delay)
                 else:
@@ -63,7 +78,7 @@ if __name__ == '__main__':
                 else:
                     terminations.append("int")
 
-            proc=rtmext.rtmrun_with_tabs(epacks, ecomps, delays)
+            proc, rtcdcommands = rtmext.rtmrun_with_tabs(epacks, ecomps, ecxts, delays, host=exechost, port=execport)
             processes.append(proc)
         else:
             for ecomp in execcomps:
@@ -77,8 +92,9 @@ if __name__ == '__main__':
                     terminations.append("kill")
                 else:
                     terminations.append("int")
-                proc=rtmext.rtmrun(ecomp.package,ecomp.comp, delay)
+                proc, rtcdcmd = rtmext.rtmrun(ecomp.package,ecomp.comp, ecomp.context, delay, host=exechost, port=execport)
                 processes.append(proc)
+                rtcdcommands.append(rtcdcmd)
 
         # wait a few second for initialize comps
         check_count=50
@@ -134,8 +150,14 @@ if __name__ == '__main__':
                 rtcon.main(sportnames, None)
 
         # set configuration variables
-        for conf in rtml.configurations:            
-            rtfret , cmp =rtfind.main(['/'+rtml.nameserver, '--name='+conf[0]+'.rtc', '--type=c'], None)
+        for conf in rtml.configurations:           
+            colonp = rtml.nameserver.find(":")
+            if colonp != -1:
+                host=rtml.nameserver[:colonp]
+            else:
+                host=rtml.nameserver
+
+            rtfret , cmp =rtfind.main(['/'+host, '--name='+conf[0]+'.rtc', '--type=c'], None)
             if cmp != None: 
                 cmp = cmp[0].encode('utf-8')
             else:
@@ -165,15 +187,16 @@ if __name__ == '__main__':
             if rtml.invoketype == "tabs":
                 pid = None
                 prlists= commands.getoutput('ps auxf').split('\n')
-                for (ecp, term) in zip(ecomps, terminations):
+                for (ecp, term, rtcdcmd) in zip(ecomps, terminations, rtcdcommands):
                     for p in prlists:
-                        if p.find(ecp)!=-1:
+                        if p.find(ecp)!=-1 or (rtcdcmd != None and p.find(rtcdcmd)!=-1):
                             pp = p.split(' ')
                             ppp = pp[1:]
                             for wr in ppp:
                                 if wr != '':
                                     pid = int(wr)
                                     break
+
                         if pid!=None:
                             if term == 'int':
                                 os.kill(pid, signal.SIGINT)
