@@ -178,7 +178,7 @@ def rtmrun(pack, comp, cxt, delay, host=None, port=None):
         sopath = search_file(comp, path)
         classname = comp[:len(comp)-3]
         initfuncname = classname + "Init"
-        rtmgr.main(['--load=' + str(sopath) + ':' + str(initfuncname), manpath[0]], None)
+        rtmgr.main(['--load=' + str(sopath) , '--init-func=' + str(initfuncname), manpath[0]], None)
         rtmgr.main(['--create=' + str(classname) + '?instance_name=' + str(cxt), manpath[0]], None)
         time.sleep(0.5)
 
@@ -238,7 +238,7 @@ def rtmrun_with_tabs(packs, comps, cxts, delays, host=None, port=None):
             tmpconf.close()
             rtcdcommand = "rtcd rtmextmgr -f " + tmpfn + " -d"
         
-            tabcommands.append("--tab -t " + comp + " -e \"" + rtcdcommand + "\"" + " --working-directory=" + path)
+            tabcommands.append("--tab -t " + cxt + " -e \"" + rtcdcommand + "\"" + " --working-directory=" + path)
             unames.append(uname)
         else:
             comppath = search_file(comp, path)
@@ -266,7 +266,7 @@ def rtmrun_with_tabs(packs, comps, cxts, delays, host=None, port=None):
             classname = comp[:len(comp)-3]
             initfuncname = classname + "Init"
             if manpath !=[]:
-                rtmgr.main(['--load=' + str(sopath) + ':' + str(initfuncname), manpath[0]], None)
+                rtmgr.main(['--load=' + str(sopath) , '--init-func=' + str(initfuncname), manpath[0]], None)
                 rtmgr.main(['--create=' + str(classname) + '?instance_name=' + str(cxt), manpath[0]], None)
                 time.sleep(0.5)
                 manager_no += 1
