@@ -3,7 +3,7 @@
 import sys,os,subprocess,signal,time,socket, commands
 import rtmext
 
-from rtshell import rtls,rtcon,rtact,rtdeact,rtconf,rtfind
+from rtshell import rtls,rtcon,rtact,rtdeact,rtconf,rtfind,rtdel
 
 if __name__ == '__main__':
     args=sys.argv
@@ -28,7 +28,8 @@ if __name__ == '__main__':
 
     if rtml:
         #rtml.debug_print()
-
+        # delete all zombies
+        rtdel.main(['--zombies'], None)
         # run
         execcomps=[]
         processes=[]
