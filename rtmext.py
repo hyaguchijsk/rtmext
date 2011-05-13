@@ -155,6 +155,12 @@ def rtmrun(pack, comp, cxt, delay, rate=None, host=None, port=None):
     baseno = 2809
 
     if comp.find('.so')!=-1:
+        cpos=comp.find(':')
+        if cpos != -1:
+            exec_context = comp[cpos+1:]
+            comp = comp[:cpos]
+        else:
+            exec_context = None
         #use rtmgr for creating components    
         uname = '_' + str(cxt)
 
@@ -170,6 +176,8 @@ def rtmrun(pack, comp, cxt, delay, rate=None, host=None, port=None):
         if rate == None:
             rate = 1000
         tmpconf.write("exec_cxt.periodic.rate: "+ str(rate) + "\n")
+        if exec_context!=None:
+            tmpconf.write("exec_cxt.periodic.type: " + str(exec_context) + "\n")
         tmpconf.close()
         rtcdcommand = "rtcd rtmextmgr -f " + tmpfn + " -d"
 
@@ -178,6 +186,11 @@ def rtmrun(pack, comp, cxt, delay, rate=None, host=None, port=None):
         time.sleep(0.1)
         #loading & creating components
         rtfret , manpath = rtfind.main(['/' + host, '--name=rtmext_manager' + uname + '.mgr', '--type=m'], None)
+        if exec_context !=None:
+            ec_sofile = exec_context + '.so'
+            ec_initfunc = exec_context + 'Init'
+            ecpath = search_file( ec_sofile, path)
+            rtmgr.main(['--load=' + str(ecpath), '--init-func=' + str(ec_initfunc), manpath[0]], None)
         sopath = search_file(comp, path)
         classname = comp[:len(comp)-3]
         initfuncname = classname + "Init"
@@ -226,6 +239,13 @@ def rtmrun_with_tabs(packs, comps, cxts, delays, rates=None, host=None, port=Non
         path=rtmpack(["find",pack])
         rtcdcommand = None
         if comp.find('.so')!=-1:
+            cpos=comp.find(':')
+            if cpos != -1:
+                exec_context = comp[cpos+1:]
+                comp = comp[:cpos]
+            else:
+                exec_context = None
+
             #use rtmgr for creating components
             uname = '_' + str(cxt)
 
@@ -241,6 +261,8 @@ def rtmrun_with_tabs(packs, comps, cxts, delays, rates=None, host=None, port=Non
             if rte == None:
                 rte = 1000
             tmpconf.write("exec_cxt.periodic.rate: " + str(rte) + "\n")
+            if exec_context!=None:
+                tmpconf.write("exec_cxt.periodic.type: " + str(exec_context) + "\n")                
             tmpconf.close()
             rtcdcommand = "rtcd rtmextmgr -f " + tmpfn + " -d"
         
@@ -266,12 +288,24 @@ def rtmrun_with_tabs(packs, comps, cxts, delays, rates=None, host=None, port=Non
     manager_no = 0
     for (pack, comp, cxt) in zip(packs, comps, cxts):
         if comp.find('.so')!=-1:
+            cpos=comp.find(':')
+            if cpos != -1:
+                exec_context = comp[cpos+1:]
+                comp = comp[:cpos]
+            else:
+                exec_context = None
+
             rtfret , manpath = rtfind.main(['/' + host, '--name=rtmext_manager' + unames[manager_no] + '.mgr', '--type=m'], None)
             path=rtmpack(["find",pack])
             sopath = search_file(comp, path)
             classname = comp[:len(comp)-3]
             initfuncname = classname + "Init"
             if manpath !=[]:
+                if exec_context !=None:
+                    ec_sofile = exec_context + '.so'
+                    ec_initfunc = exec_context + 'Init'
+                    ecpath = search_file( ec_sofile, path)
+                    rtmgr.main(['--load=' + str(ecpath), '--init-func=' + str(ec_initfunc), manpath[0]], None)
                 rtmgr.main(['--load=' + str(sopath) , '--init-func=' + str(initfuncname), manpath[0]], None)
                 rtmgr.main(['--create=' + str(classname) + '?instance_name=' + str(cxt), manpath[0]], None)
                 time.sleep(0.5)
