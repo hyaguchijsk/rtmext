@@ -134,7 +134,7 @@ def ordsum(str):
         sum += ord(chr)
     return sum
 
-def rtmrun(pack, comp, cxt, delay, host=None, port=None):
+def rtmrun(pack, comp, cxt, delay, rate=None, host=None, port=None):
     path=rtmpack(["find",pack])
     sproc=None
     pythonpath=commands.getoutput("which python")
@@ -167,6 +167,9 @@ def rtmrun(pack, comp, cxt, delay, host=None, port=None):
         tmpconf.write("corba.master_manager:" + host + ":" + str(mmport) + "\n")
         tmpconf.write("manager.modules.load_path: ./\n")
         tmpconf.write("manager.modules.abs_path_allowed: yes\n")
+        if rate == None:
+            rate = 1000
+        tmpconf.write("exec_cxt.periodic.rate: "+ str(rate) + "\n")
         tmpconf.close()
         rtcdcommand = "rtcd rtmextmgr -f " + tmpfn + " -d"
 
@@ -199,7 +202,7 @@ def rtmrun(pack, comp, cxt, delay, host=None, port=None):
 
     return [sproc, rtcdcommand]
 
-def rtmrun_with_tabs(packs, comps, cxts, delays, host=None, port=None):
+def rtmrun_with_tabs(packs, comps, cxts, delays, rates=None, host=None, port=None):
     pythonpath=commands.getoutput("which python")
     if os.environ.has_key("EUS"):
         if os.environ["EUS"] == "jskrbeusgl":
@@ -219,7 +222,7 @@ def rtmrun_with_tabs(packs, comps, cxts, delays, host=None, port=None):
     if port == None:
         port = 2809
 
-    for (pack, comp, cxt, delay) in zip(packs, comps, cxts, delays):
+    for (pack, comp, cxt, rte, delay) in zip(packs, comps, cxts, rates, delays):
         path=rtmpack(["find",pack])
         rtcdcommand = None
         if comp.find('.so')!=-1:
@@ -235,6 +238,9 @@ def rtmrun_with_tabs(packs, comps, cxts, delays, host=None, port=None):
             tmpconf.write("corba.master_manager:" + host + ":" + str(mmport) + "\n")
             tmpconf.write("manager.modules.load_path: ./\n")
             tmpconf.write("manager.modules.abs_path_allowed: yes\n")
+            if rte == None:
+                rte = 1000
+            tmpconf.write("exec_cxt.periodic.rate: " + str(rte) + "\n")
             tmpconf.close()
             rtcdcommand = "rtcd rtmextmgr -f " + tmpfn + " -d"
         
@@ -303,6 +309,7 @@ class rtmcomponent:
         self.execute=True
         self.dstate="activate"
         self.ainterval=0
+        self.execrate=None
 
     def context_name(self):
         return self.formats.replace("%h",socket.gethostname()).replace("%n",self.context)
@@ -356,7 +363,7 @@ class rtmlauncher:
         self.connectors=[]
         self.invoketype=None
 
-    def set_component(self,pack,comp,cxt,exe,dstate,ainterval):
+    def set_component(self,pack,comp,cxt,exe,dstate,ainterval,execrate):
         rtmcomp=rtmcomponent()
         rtmcomp.package=pack
         rtmcomp.comp=comp
@@ -364,6 +371,7 @@ class rtmlauncher:
         rtmcomp.execute=exe
         rtmcomp.dstate=dstate
         rtmcomp.ainterval=ainterval
+        rtmcomp.execrate=execrate
         rtcconfattr=read_rtc_conf(pack)
         if rtcconfattr:
             rtmcomp.formats=rtcconfattr.get("naming.formats")
@@ -436,11 +444,16 @@ def read_launch_xml(xmlfile, launchpath=None):
                     else:
                         rtc_ainterval=None
 
+                    if node.attributes.get("execrate")!=None:
+                        rtc_execrate=float(node.attributes.get("execrate").value)
+                    else:
+                        rtc_execrate=None
+
                     rtc_exe=True
                     rtc_exe_attr=node.attributes.get("execute")
                     if rtc_exe_attr:
                         rtc_exe=(rtc_exe_attr.value=="true")
-                    rtml.set_component(rtc_pack,rtc_comp,rtc_cxt,rtc_exe, rtc_dstate, rtc_ainterval)
+                    rtml.set_component(rtc_pack,rtc_comp,rtc_cxt,rtc_exe, rtc_dstate, rtc_ainterval, rtc_execrate)
                     for conf in node.childNodes:
                         if conf.nodeType==node.ELEMENT_NODE:
                             if conf.tagName=="configuration":

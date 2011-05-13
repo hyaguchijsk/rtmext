@@ -56,19 +56,21 @@ if __name__ == '__main__':
                 execport=rtml.nameserver[colonp+1:]
             else:
                 exechost=rtml.nameserver
-                execport=None                
+                execport=2809
         else:
-            exechost=None
-            execport=None
+            exechost='localhost'
+            execport=2809
 
         if rtml.invoketype == "tabs":
             epacks=[]
             delays=[]
             ecxts=[]
+            erates=[]
             for ecomp in execcomps:
                 epacks.append(ecomp.package)
                 ecomps.append(ecomp.comp)
                 ecxts.append(ecomp.context)
+                erates.append(ecomp.execrate)
                 if hasattr(ecomp, "delay"):
                     delays.append(ecomp.delay)
                 else:
@@ -79,7 +81,7 @@ if __name__ == '__main__':
                 else:
                     terminations.append("int")
 
-            proc, rtcdcommands = rtmext.rtmrun_with_tabs(epacks, ecomps, ecxts, delays, host=exechost, port=execport)
+            proc, rtcdcommands = rtmext.rtmrun_with_tabs(epacks, ecomps, ecxts, delays, rates=erates, host=exechost, port=execport)
             processes.append(proc)
         else:
             for ecomp in execcomps:
@@ -93,7 +95,8 @@ if __name__ == '__main__':
                     terminations.append("kill")
                 else:
                     terminations.append("int")
-                proc, rtcdcmd = rtmext.rtmrun(ecomp.package,ecomp.comp, ecomp.context, delay, host=exechost, port=execport)
+
+                proc, rtcdcmd = rtmext.rtmrun(ecomp.package,ecomp.comp, ecomp.context, delay, rate=ecomp.execrate, host=exechost, port=execport)
                 processes.append(proc)
                 rtcdcommands.append(rtcdcmd)
 
