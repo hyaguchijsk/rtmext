@@ -134,7 +134,7 @@ def ordsum(str):
         sum += ord(chr)
     return sum
 
-def rtmrun(pack, comp, cxt, delay, rate=None, host=None, port=None):
+def rtmrun(pack, comp, cxt, delay, rate=None, ecxtpack=None, host=None, port=None):
     path=rtmpack(["find",pack])
     sproc=None
     pythonpath=commands.getoutput("which python")
@@ -186,13 +186,15 @@ def rtmrun(pack, comp, cxt, delay, rate=None, host=None, port=None):
         time.sleep(0.1)
         #loading & creating components
         rtfret , manpath = rtfind.main(['/' + host, '--name=rtmext_manager' + uname + '.mgr', '--type=m'], None)
+        sopath = search_file(comp, path)
+        classname = comp[:len(comp)-3]
         if exec_context !=None:
             ec_sofile = exec_context + '.so'
             ec_initfunc = exec_context + 'Init'
+            if not ecxtpack == None:
+                path=rtmpack(["find", ecxtpack])
             ecpath = search_file( ec_sofile, path)
             rtmgr.main(['--load=' + str(ecpath), '--init-func=' + str(ec_initfunc), manpath[0]], None)
-        sopath = search_file(comp, path)
-        classname = comp[:len(comp)-3]
         initfuncname = classname + "Init"
         rtmgr.main(['--load=' + str(sopath) , '--init-func=' + str(initfuncname), manpath[0]], None)
         rtmgr.main(['--create=' + str(classname) + '?instance_name=' + str(cxt), manpath[0]], None)
@@ -215,7 +217,7 @@ def rtmrun(pack, comp, cxt, delay, rate=None, host=None, port=None):
 
     return [sproc, rtcdcommand]
 
-def rtmrun_with_tabs(packs, comps, cxts, delays, rates=None, host=None, port=None):
+def rtmrun_with_tabs(packs, comps, cxts, delays, rates=None, ecxtpacks=None, host=None, port=None):
     pythonpath=commands.getoutput("which python")
     if os.environ.has_key("EUS"):
         if os.environ["EUS"] == "jskrbeusgl":
@@ -286,7 +288,8 @@ def rtmrun_with_tabs(packs, comps, cxts, delays, rates=None, host=None, port=Non
     time.sleep(0.1)
     #loading & creating components from manager
     manager_no = 0
-    for (pack, comp, cxt) in zip(packs, comps, cxts):
+
+    for (pack, comp, cxt, ectpack) in zip(packs, comps, cxts, ecxtpacks):
         if comp.find('.so')!=-1:
             cpos=comp.find(':')
             if cpos != -1:
@@ -304,10 +307,12 @@ def rtmrun_with_tabs(packs, comps, cxts, delays, rates=None, host=None, port=Non
                 if exec_context !=None:
                     ec_sofile = exec_context + '.so'
                     ec_initfunc = exec_context + 'Init'
+                    if not ectpack == None:
+                        path=rtmpack(["find",ectpack])
                     ecpath = search_file( ec_sofile, path)
-                    rtmgr.main(['--load=' + str(ecpath), '--init-func=' + str(ec_initfunc), manpath[0]], None)
-                rtmgr.main(['--load=' + str(sopath) , '--init-func=' + str(initfuncname), manpath[0]], None)
-                rtmgr.main(['--create=' + str(classname) + '?instance_name=' + str(cxt), manpath[0]], None)
+                    rtmgr.main(['--load=' + str(ecpath),  '--init-func=' + str(ec_initfunc), manpath[0]], None)
+                rtmgr.main(['--load=' + str(sopath) ,'--init-func=' + str(initfuncname), manpath[0]], None)
+                rtmgr.main(['--create=' + str(classname) + '?instance_name=' + str(cxt) ,manpath[0]], None)
                 time.sleep(0.5)
                 manager_no += 1
         
@@ -344,6 +349,7 @@ class rtmcomponent:
         self.dstate="activate"
         self.ainterval=0
         self.execrate=None
+        self.ecxtpack=None
 
     def context_name(self):
         return self.formats.replace("%h",socket.gethostname()).replace("%n",self.context)
@@ -397,7 +403,7 @@ class rtmlauncher:
         self.connectors=[]
         self.invoketype=None
 
-    def set_component(self,pack,comp,cxt,exe,dstate,ainterval,execrate):
+    def set_component(self,pack,comp,cxt,exe,dstate,ainterval,execrate,ecxtpack):
         rtmcomp=rtmcomponent()
         rtmcomp.package=pack
         rtmcomp.comp=comp
@@ -406,6 +412,7 @@ class rtmlauncher:
         rtmcomp.dstate=dstate
         rtmcomp.ainterval=ainterval
         rtmcomp.execrate=execrate
+        rtmcomp.ecxtpack=ecxtpack
         rtcconfattr=read_rtc_conf(pack)
         if rtcconfattr:
             rtmcomp.formats=rtcconfattr.get("naming.formats")
@@ -482,12 +489,15 @@ def read_launch_xml(xmlfile, launchpath=None):
                         rtc_execrate=float(node.attributes.get("execrate").value)
                     else:
                         rtc_execrate=None
-
+                    if node.attributes.get("ecxtpackage")!=None:
+                        rtc_ecxtpack=node.attributes.get("ecxtpackage").value
+                    else:
+                        rtc_ecxtpack=None
                     rtc_exe=True
                     rtc_exe_attr=node.attributes.get("execute")
                     if rtc_exe_attr:
                         rtc_exe=(rtc_exe_attr.value=="true")
-                    rtml.set_component(rtc_pack,rtc_comp,rtc_cxt,rtc_exe, rtc_dstate, rtc_ainterval, rtc_execrate)
+                    rtml.set_component(rtc_pack,rtc_comp,rtc_cxt,rtc_exe, rtc_dstate, rtc_ainterval, rtc_execrate, rtc_ecxtpack)
                     for conf in node.childNodes:
                         if conf.nodeType==node.ELEMENT_NODE:
                             if conf.tagName=="configuration":

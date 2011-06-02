@@ -66,11 +66,14 @@ if __name__ == '__main__':
             delays=[]
             ecxts=[]
             erates=[]
+            execxtpacks=[]
             for ecomp in execcomps:
                 epacks.append(ecomp.package)
                 ecomps.append(ecomp.comp)
                 ecxts.append(ecomp.context)
                 erates.append(ecomp.execrate)
+                execxtpacks.append(ecomp.ecxtpack)
+
                 if hasattr(ecomp, "delay"):
                     delays.append(ecomp.delay)
                 else:
@@ -81,7 +84,8 @@ if __name__ == '__main__':
                 else:
                     terminations.append("int")
 
-            proc, rtcdcommands = rtmext.rtmrun_with_tabs(epacks, ecomps, ecxts, delays, rates=erates, host=exechost, port=execport)
+            proc, rtcdcommands = rtmext.rtmrun_with_tabs(epacks, ecomps, ecxts, delays, rates=erates, ecxtpacks=execxtpacks, host=exechost, port=execport)
+
             processes.append(proc)
         else:
             for ecomp in execcomps:
@@ -96,7 +100,7 @@ if __name__ == '__main__':
                 else:
                     terminations.append("int")
 
-                proc, rtcdcmd = rtmext.rtmrun(ecomp.package,ecomp.comp, ecomp.context, delay, rate=ecomp.execrate, host=exechost, port=execport)
+                proc, rtcdcmd = rtmext.rtmrun(ecomp.package,ecomp.comp, ecomp.context, delay, rate=ecomp.execrate, ecxtpack=ecomp.ecxtpack, host=exechost, port=execport)
                 processes.append(proc)
                 rtcdcommands.append(rtcdcmd)
 
