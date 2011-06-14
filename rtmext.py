@@ -85,7 +85,7 @@ def search_file(compname, searchpath):
                 return(searchpath + "/" + compname)
     return None
 
-def rtmpack(args):  
+def rtmpack(args):
     if args[0]=="find":
         path_list=rtmpath()
         pkpath = search_package(args[1], path_list)
@@ -94,6 +94,18 @@ def rtmpack(args):
     elif args[0]=="depend":
         #return(rtmdepend(args[1]))
         return(rtmdepend_chain(args[1]))
+    elif args[0]=="list-names":
+        #pkglist=[]
+        pkglist=""
+        for path in rtmpath():
+            if path != ".":
+                dirs=os.listdir(path)
+                for pkg in dirs:
+                    if pkg.find(".")!=0:
+                        if os.path.isdir(path + "/" + pkg):
+                            #pkglist.append(pkg)
+                            pkglist = pkglist + pkg + "\n"
+        return pkglist
     else:
         print >>sys.stderr, "rtmpack: unknown arg: " + args[0]
 
