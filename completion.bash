@@ -21,9 +21,10 @@ _comp_rtm_pkg_and_xml_list(){
     local pkgnames filenames
     COMPREPLY=()
     pkgnames="`rtmpack list-names`"
-    filenames="`ls -1 *.xml 2> /dev/null`"
+    filenames=$(for fname in `ls -1 ./*.xml 2> /dev/null`; do echo ${fname/.\//}; done)
     IFS=$'\n'
-    COMPREPLY=($(compgen -W "${pkgnames}${filenames}" -- $1))
+    COMPREPLY=($(compgen -W "${pkgnames}
+${filenames}" -- $1))
     unset IFS
     return 0
 }
