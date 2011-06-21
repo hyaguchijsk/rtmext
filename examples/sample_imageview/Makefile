@@ -27,11 +27,11 @@ WRAPPER_FLAGS = --include-dir="" --skel-suffix=Skel --stub-suffix=Stub
 SKEL_OBJ = 
 STUB_OBJ = 
 IMPL_OBJ = 
-OBJS     = ImageViewer.o ImageFileCapture.o $(SKEL_OBJ) $(STUB_OBJ) $(IMPL_OBJ)
+OBJS     = ImageViewer.o ImageFileCapture.o CameraCapture.o $(SKEL_OBJ) $(STUB_OBJ) $(IMPL_OBJ)
 
 .SUFFIXES : .so
 
-all: ImageViewer.so ImageViewerComp ImageFileCapture.so ImageFileCaptureComp
+all: ImageViewer.so ImageViewerComp ImageFileCapture.so ImageFileCaptureComp CameraCapture.so CameraCaptureComp
 
 .cpp.o:
 	rm -f $@
@@ -47,11 +47,14 @@ ImageViewerComp: ImageViewerComp.o $(OBJS)
 ImageFileCaptureComp: ImageFileCaptureComp.o $(OBJS)
 	$(CXX) -o $@ $(OBJS) ImageFileCaptureComp.o $(LDFLAGS) 
 
+CameraCaptureComp: CameraCaptureComp.o $(OBJS)
+	$(CXX) -o $@ $(OBJS) CameraCaptureComp.o $(LDFLAGS) 
+
 clean: clean_objs clean_skelstub
 	rm -f *~
 
 clean_objs:
-	rm -f $(OBJS) ImageViewerComp.o ImageViewer.so ImageViewerComp ImageFileCaptureComp.o ImageFileCapture.so ImageFileCaptureComp
+	rm -f $(OBJS) ImageViewerComp.o ImageViewer.so ImageViewerComp ImageFileCaptureComp.o ImageFileCapture.so ImageFileCaptureComp CameraCapture.so CameraCaptureComp
 
 clean_skelstub:
 	rm -f *Skel.h *Skel.cpp
@@ -66,5 +69,9 @@ ImageViewerComp.o: ImageViewerComp.cpp ImageViewer.cpp ImageViewer.h
 ImageFileCapture.so: $(OBJS)
 ImageFileCapture.o: ImageFileCapture.h
 ImageFileCaptureComp.o: ImageFileCaptureComp.cpp ImageFileCapture.cpp ImageFileCapture.h
+
+CameraCapture.so: $(OBJS)
+CameraCapture.o: CameraCapture.h
+CameraCaptureComp.o: CameraCaptureComp.cpp CameraCapture.cpp CameraCapture.h
 
 # end of Makefile
