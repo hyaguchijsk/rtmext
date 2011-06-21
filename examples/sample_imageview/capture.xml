@@ -1,0 +1,15 @@
+<xml>
+  <nameserver host="localhost" />
+  <terminal-invoke type="tabs"/>
+  <component package="sample_imageview" comp="ImageViewerComp"
+	     context="ImageViewer0" />
+  <component package="sample_imageview" comp="CameraCaptureComp"
+	     context="CameraCapture0" defaultstate="activate"
+	     activation_interval="100.0">
+    <configuration name="DeviceID" value="0"/>
+    </component>
+  <connection>
+    <port type="out" context="CameraCapture0" name="Image" />
+    <port type="in" context="ImageViewer0" name="Image" />
+  </connection>
+</xml>
