@@ -341,6 +341,9 @@ class rtmprocess:
         self.package=""
         self.comp=""
         self.delay=""
+        self.context=""
+        self.execrate=""
+        self.ecxtpack=""
 
     def context_name(self):
         return self.comp
