@@ -84,7 +84,7 @@ if __name__ == '__main__':
                 else:
                     terminations.append("int")
 
-            proc, rtcdcommands = rtmext.rtmrun_with_tabs(epacks, ecomps, ecxts, delays, rates=erates, ecxtpacks=execxtpacks, host=exechost, port=execport)
+            proc, rtcdcommands = rtmext.rtmrun_with_tabs(epacks, ecomps, ecxts, delays, rates=erates, ecxtpacks=execxtpacks, host=exechost, port=execport,terminal_options=rtml.terminal_options)
 
             processes.append(proc)
         else:

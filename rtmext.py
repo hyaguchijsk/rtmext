@@ -229,7 +229,7 @@ def rtmrun(pack, comp, cxt, delay, rate=None, ecxtpack=None, host=None, port=Non
 
     return [sproc, rtcdcommand]
 
-def rtmrun_with_tabs(packs, comps, cxts, delays, rates=None, ecxtpacks=None, host=None, port=None):
+def rtmrun_with_tabs(packs, comps, cxts, delays, rates=None, ecxtpacks=None, host=None, port=None,terminal_options=""):
     pythonpath=commands.getoutput("which python")
     if os.environ.has_key("EUS"):
         if os.environ["EUS"] == "jskrbeusgl":
@@ -295,7 +295,7 @@ def rtmrun_with_tabs(packs, comps, cxts, delays, rates=None, ecxtpacks=None, hos
         rtcdcommands.append(rtcdcommand)
 
     if tabcommands != []:
-        sprocs = subprocess.Popen("/usr/bin/gnome-terminal " + " ".join(tabcommands), shell=True)
+        sprocs = subprocess.Popen("/usr/bin/gnome-terminal " + terminal_options + " " + " ".join(tabcommands), shell=True)
 
     time.sleep(0.1)
     #loading & creating components from manager
@@ -417,6 +417,7 @@ class rtmlauncher:
         self.configurations=[]
         self.connectors=[]
         self.invoketype=None
+        self.terminal_options=""
 
     def set_component(self,pack,comp,cxt,exe,dstate,ainterval,execrate,ecxtpack):
         rtmcomp=rtmcomponent()
@@ -487,6 +488,8 @@ def read_launch_xml(xmlfile, launchpath=None):
                 if node.tagName=="terminal-invoke":
                     if node.attributes.get("type")!=None:
                         rtml.invoketype=node.attributes.get("type").value
+                    if node.attributes.get("options")!=None:
+                        rtml.terminal_options=node.attributes.get("options").value
                 if node.tagName=="component":
                     rtc_pack=node.attributes.get("package").value
                     rtc_comp=node.attributes.get("comp").value
